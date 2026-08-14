@@ -1,0 +1,4 @@
+# sharp is only needed by next/image, which this demo does not use. Skipping its native
+# build keeps `pnpm install` from compiling anything on a fresh clone.
+allowBuilds:
+  sharp: false

@@ -1,0 +1,41 @@
+{
+  "name": "yago-screen-voice",
+  "version": "0.1.0",
+  "private": false,
+  "license": "MIT",
+  "description": "A voice agent that watches the user's screen and talks them through a setup flow, step by step.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YaVendio/yago-screen-voice.git"
+  },
+  "bugs": "https://github.com/YaVendio/yago-screen-voice/issues",
+  "homepage": "https://github.com/YaVendio/yago-screen-voice#readme",
+  "keywords": [
+    "voice-agent",
+    "realtime-api",
+    "screen-sharing",
+    "onboarding",
+    "webrtc",
+    "nextjs"
+  ],
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "next": "15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": []
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "typescript": "^5.7.3"
+  }
+}
