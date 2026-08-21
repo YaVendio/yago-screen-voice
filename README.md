@@ -1,96 +1,65 @@
-# A voice agent that watches your screen
+<div align="center">
 
-It talks someone through a setup flow the way a support person on a video call would: it sees
-their screen, recognizes which step they are on, and tells them what to click next. When they
-start talking, it shuts up mid-sentence.
+# yago-screen-voice
 
-We built it because connecting WhatsApp was the highest-friction step in our onboarding —
-twelve recurring failure modes that support was resolving reactively, one screenshot at a
-time. This is that system, with our internal playbook swapped for a fictional one.
+**A voice agent that watches your screen and talks you through a setup flow, step by step.**
 
-Runs in the browser against any OpenAI-compatible realtime endpoint. No SDK.
+It sees the screen, recognizes which step the person is on, and tells them what to click next —
+the way a support person on a video call would. When they start talking, it shuts up
+mid-sentence.
+
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![realtime: no SDK](https://img.shields.io/badge/realtime-no%20SDK-brightgreen)](src/voice/lib/realtime-protocol.ts)
+
+</div>
+
+## Demo
+
+<!-- Replace with docs/demo.gif once recorded -->
+> **Demo clip coming here.** 40 seconds: share a screen, get told what to click, interrupt the
+> agent mid-sentence.
+
+## Quickstart
 
 ```bash
 git clone https://github.com/YaVendio/yago-screen-voice.git && cd yago-screen-voice
 pnpm install
-cp .env.example .env      # your own key
+cp .env.example .env      # your own key — VOICE_MODE=direct is fine locally
 pnpm dev                  # → localhost:3000
 ```
 
 Then: click, grant the microphone, share your **entire screen**, and talk.
 
----
+Runs in the browser against any OpenAI-compatible realtime endpoint. No SDK.
 
-## What is actually hard about this
+## How it works
 
-The realtime API is the easy part. What took the iterations was everything around it.
+```mermaid
+flowchart LR
+  subgraph browser
+    mic["🎙 mic<br/>PCM16 · 24 kHz"]
+    scr["🖥 screen<br/>JPEG · 1600px"]
+    panel["panel<br/>mute · pause · stop"]
+  end
+  subgraph your_server["your server"]
+    token["POST /api/voice/token<br/>mints a per-session key"]
+  end
+  api[["realtime API<br/>OpenAI-compatible"]]
 
-### One permission per click
+  panel --> token
+  token -. "short-lived · budget-capped · one model" .-> panel
+  mic -- "WebSocket" --> api
+  scr -- "≥2 s apart · >2% changed · 15 s keepalive" --> api
+  api -- "audio deltas, dropped on barge-in" --> panel
+```
 
-A browser grants one permission per user gesture. Awaiting the microphone prompt spends the
-click, so asking for the screen in the same handler is rejected without ever showing the
-picker — and Safari is strictest about it. The session therefore **stops** between the two
-requests and waits for a second click (`status: 'awaiting-screen'`).
+Two clicks, not one: a browser grants one permission per gesture, so the session stops between
+the microphone and the screen. Full-screen shares only — setup flows open provider popups that
+live outside any single tab. [Architecture →](docs/architecture.md)
 
-Which means the microphone is live while nothing else is. If the person walks away, a 120 s
-deadline releases it.
-
-### Cutting the agent off has three parts, not one
-
-`interrupt_response: true` cancels the response upstream. That is not enough. Audio arrives
-faster than it plays, so seconds of it are already scheduled in the audio graph — every
-`AudioBufferSourceNode` is tracked so it can be stopped on the spot. And the provider keeps
-streaming for a moment after it hears you, so a flag drops the in-flight tail until a new
-`response.created` arrives.
-
-The check runs **first** in the socket handler. Yielding late is the same as not yielding.
-
-### Screen frames are the entire cost model
-
-Three controls compose:
-
-- **`computeFrameDifference`** samples every 17th pixel. 17 is prime — with an even step,
-  every sample lands on the same columns and a checkbox between them never registers.
-- **`shouldSendFrame`** enforces a 2 s floor, a 15 s keepalive ceiling (so the model does not
-  go blind while idle), and a 2 % change threshold.
-- Frames and audio share one 512 KB socket backlog bound. Without that, a stalled connection
-  drops audio while base64 JPEGs keep queuing.
-
-Frames go out at 1600px / JPEG 0.85 / `detail: 'high'`. Cheaper settings are tempting and
-wrong: the agent asks people to click buttons **by name**, so the labels have to survive.
-`detail: 'low'` downsamples the frame before the model ever sees it. The rate limiter is what
-bounds cost, not the resolution.
-
-### Full screen only
-
-A partial share is rejected on purpose. Real setup flows open a provider popup, which lives
-outside any single tab or window — a tab share leaves the agent blind exactly where the
-documented errors happen. Browsers that do not report `displaySurface` are trusted rather
-than blocked.
-
-### The credential problem
-
-A browser `WebSocket` cannot send an `Authorization` header. The only compatible path puts the
-credential in the URL or a subprotocol, which means **whatever the server returns is visible
-to the client**.
-
-So the server never returns its real key. `POST /api/voice/token` mints a per-session virtual
-key — minutes-long, budget-capped, restricted to one model — and validates seven things about
-what came back, including that it is not the operator key echoed straight back. That last
-check is the one thing the route exists for.
-
-### Nobody should say a verification code out loud
-
-A screen-watching, always-listening agent will happily ask someone to read out the SMS code it
-can see them typing. Then it is in the transcript *and* in the frames.
-
-The shared conduct forbids asking for codes, QR codes, or card details at all, and instructs
-the agent to ask for **Pause screen** before those screens and **mute** before an SMS code —
-because people read codes aloud as they type them.
-
----
-
-## The playbook
+## The playbook — the part you replace
 
 The agent's knowledge is a typed structure, not a prompt string:
 
@@ -108,42 +77,21 @@ knows between two versions.
 
 The field that decides whether any of this works is **`signals`** — the verbatim text on the
 user's screen. That is what turns *"what does the message say?"* into *"I see the credit-line
-error, here is the fix"*.
+error, here is the fix"*. [How to write one →](src/playbooks/README.md)
 
-See [`src/playbooks/README.md`](src/playbooks/README.md) for how to write one. Two rules from
-production are worth stealing:
+## Adapting it
 
-- **Write a closed list of what the agent may tell someone to delete.** Never a category. On
-  a flow where the provider hosts the whole signup and leaves nothing to clean up, the answer
-  is *nothing* — say so explicitly, or the agent improvises on someone's account.
-- **Give every playbook an escalation floor.** Some failures leave debris that makes the next
-  attempt harder. "Retry until it works" is not a strategy.
-
----
-
-## Layout
+`src/voice/` has no imports from the rest of the app. Copy the directory, give the hook a
+playbook, render your own panel.
 
 ```
 src/voice/                     the agent — no app dependencies
-  types.ts                     Playbook + session types
-  hooks/use-voice-session.ts   the state machine: permissions, socket, audio, frames
-  lib/realtime-protocol.ts     event builders + parsing (never trusts a frame)
-  lib/system-instruction.ts    playbook → system instruction
-  lib/pcm-audio.ts             PCM16 ↔ Float32, resampling, base64
-  lib/frame-diff.ts            what is worth sending
-  lib/media-errors.ts          refusal vs. broken device
-  lib/outage-alert.ts          Slack alert on upstream failure, with a cooldown
+  hooks/use-voice-session.ts   state machine: permissions, socket, audio, frames
+  lib/                         protocol, PCM audio, frame diffing, errors, alerts
   components/                  a reference panel — replace it with yours
-
 src/playbooks/                 the knowledge. start here when adapting it
 src/app/api/voice/token/       credential minting
-src/app/page.tsx               the demo
 ```
-
-`src/voice/` has no imports from the rest of the app. Copy the directory into your project,
-give the hook a playbook, and render your own panel.
-
----
 
 ## Before you deploy this
 
@@ -152,28 +100,36 @@ money on every call:
 
 1. **Authenticate the caller.** Refuse anonymous requests.
 2. **Key the cooldown on that caller**, not on a shared bucket.
-3. **If it is behind a flag or an experiment, decide the arm on the server too**, and fail
-   closed. The browser's assignment is not an authorization boundary; an unreadable
-   assignment must not become a free credential.
+3. **Decide any flag or experiment arm on the server too**, and fail closed. The browser's
+   assignment is not an authorization boundary.
 4. **Opt the transcript out of session replay.** Speech carries whatever was on the screen
    someone was reading out loud.
 
 `VOICE_MODE=direct` hands the key straight to the browser. It refuses to run in a production
-build and needs an explicit opt-in flag. It is for a laptop, not a deployment.
+build. It is for a laptop, not a deployment.
 
----
-
-## What we know does not work yet
+## Known limits
 
 - **Safari** cannot run the floating-bubble mode we want next (Document Picture-in-Picture is
-  Chrome/Edge/Firefox only). Today the panel is docked, which means the mute and pause
-  buttons live in one tab while the user is looking at another.
-- **Mobile** has no screen-share equivalent. The entry point should be hidden there.
-- **`ScriptProcessorNode` is deprecated.** It still works everywhere and an `AudioWorklet`
-  rewrite has not been worth it yet. It is the obvious first contribution.
-- The frame loop is a 1 s `setInterval`, which browsers throttle in background tabs. Fine
-  while the panel is docked in the foreground; a problem for the bubble.
+  Chrome/Edge/Firefox only). Today the panel is docked.
+- **Mobile** has no screen-share equivalent. Hide the entry point there.
+- **`ScriptProcessorNode` is deprecated.** An `AudioWorklet` rewrite is the obvious first
+  contribution.
+- The frame loop is a 1 s `setInterval`, which browsers throttle in background tabs.
+
+## Docs
+
+| | |
+|---|---|
+| [Engineering notes](docs/engineering-notes.md) | the six constraints that shaped this: permissions, barge-in, frame cost, credentials, and why nobody should say a verification code out loud |
+| [Architecture](docs/architecture.md) | session lifecycle, threading model, credential flow, failure taxonomy |
+| [Writing a playbook](src/playbooks/README.md) | the structure, and two rules from production |
+| [Contributing](CONTRIBUTING.md) | where help is worth the most, and where it is not |
 
 ---
+
+Why it exists: connecting WhatsApp was the highest-friction step in our onboarding — twelve
+recurring failure modes that support was resolving reactively, one screenshot at a time. This
+is that system, with our internal playbook swapped for a fictional one.
 
 MIT. Built at [YaVendió](https://yavendio.com).
