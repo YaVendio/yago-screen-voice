@@ -13,14 +13,14 @@ mid-sentence.
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![realtime: no SDK](https://img.shields.io/badge/realtime-no%20SDK-brightgreen)](src/voice/lib/realtime-protocol.ts)
 
-</div>
-
-## Demo
+<br/>
 
 ![A merchant being walked through connecting WhatsApp, with the agent's live transcript on the right](docs/demo.gif)
 
-25 seconds of a real session. The agent names the screen the merchant is on without being told,
-the merchant asks it mid-session to switch to English, and it switches without losing the step.
+*A real session, 25 seconds. The agent names the screen the merchant is on without being told —
+then the merchant asks it to switch to English mid-session, and it switches without losing the step.*
+
+</div>
 
 ## Quickstart
 
