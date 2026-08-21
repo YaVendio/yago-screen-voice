@@ -13,14 +13,20 @@ mid-sentence.
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![realtime: no SDK](https://img.shields.io/badge/realtime-no%20SDK-brightgreen)](src/voice/lib/realtime-protocol.ts)
 
-</div>
-
-## Demo
+<br/>
 
 ![A merchant being walked through connecting WhatsApp, with the agent's live transcript on the right](docs/demo.gif)
 
-25 seconds of a real session. The agent names the screen the merchant is on without being told,
-the merchant asks it mid-session to switch to English, and it switches without losing the step.
+*A real session, 25 seconds. The agent names the screen the merchant is on without being told —
+then the merchant asks it to switch to English mid-session, and it switches without losing the step.*
+
+### [**▶&nbsp; Watch the full session — 4 min**](https://drive.google.com/file/d/1zXBKJjtjKgz48NoTqvPnK3wTy48wSA8-/view)
+
+The clip above is the first 25 seconds. The full recording runs to the part that made this worth
+building: Meta answering *"the phone number you have entered is not associated with the business you
+selected"*, and the agent reading that error off the screen and walking the merchant out of it.
+
+</div>
 
 ## Quickstart
 
@@ -126,6 +132,7 @@ build. It is for a laptop, not a deployment.
 | [Architecture](docs/architecture.md) | session lifecycle, threading model, credential flow, failure taxonomy |
 | [Writing a playbook](src/playbooks/README.md) | the structure, and two rules from production |
 | [Contributing](CONTRIBUTING.md) | where help is worth the most, and where it is not |
+| [Full session recording](https://drive.google.com/file/d/1zXBKJjtjKgz48NoTqvPnK3wTy48wSA8-/view) | 4 minutes, unedited: the whole WhatsApp connection flow, the error Meta throws, and the recovery |
 
 ---
 
