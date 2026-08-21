@@ -17,9 +17,10 @@ mid-sentence.
 
 ## Demo
 
-<!-- Replace with docs/demo.gif once recorded -->
-> **Demo clip coming here.** 40 seconds: share a screen, get told what to click, interrupt the
-> agent mid-sentence.
+![A merchant being walked through connecting WhatsApp, with the agent's live transcript on the right](docs/demo.gif)
+
+25 seconds of a real session. The agent names the screen the merchant is on without being told,
+the merchant asks it mid-session to switch to English, and it switches without losing the step.
 
 ## Quickstart
 
