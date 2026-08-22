@@ -1,15 +1,15 @@
 {
-  "name": "yago-screen-voice",
+  "name": "whatsapp-helper-copilot",
   "version": "0.1.0",
   "private": false,
   "license": "MIT",
   "description": "A voice agent that watches the user's screen and talks them through a setup flow, step by step.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/YaVendio/yago-screen-voice.git"
+    "url": "git+https://github.com/YaVendio/whatsapp-helper-copilot.git"
   },
-  "bugs": "https://github.com/YaVendio/yago-screen-voice/issues",
-  "homepage": "https://github.com/YaVendio/yago-screen-voice#readme",
+  "bugs": "https://github.com/YaVendio/whatsapp-helper-copilot/issues",
+  "homepage": "https://github.com/YaVendio/whatsapp-helper-copilot#readme",
   "keywords": [
     "voice-agent",
     "realtime-api",

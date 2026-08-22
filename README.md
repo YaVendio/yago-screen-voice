@@ -1,6 +1,6 @@
 <div align="center">
 
-# yago-screen-voice
+# whatsapp-helper-copilot
 
 **A voice agent that watches your screen and talks you through a setup flow, step by step.**
 
@@ -31,7 +31,7 @@ selected"*, and the agent reading that error off the screen and walking the merc
 ## Quickstart
 
 ```bash
-git clone https://github.com/YaVendio/yago-screen-voice.git && cd yago-screen-voice
+git clone https://github.com/YaVendio/whatsapp-helper-copilot.git && cd whatsapp-helper-copilot
 pnpm install
 cp .env.example .env      # your own key — VOICE_MODE=direct is fine locally
 pnpm dev                  # → localhost:3000
